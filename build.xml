@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<project name="StarBuilder" default="build" basedir=".">
+	
+	<property name="src" value="${basedir}/src" />
+	<property name="build" value="${basedir}/build" />
+	<property name="jar" value="${basedir}/messagesbuilder.jar"/>
+
+	<fileset id="fileset" dir="../CommonLibrariesBin">
+		<include name="microsoft_office/poi/poi-3.2-FINAL-20081019.jar"/>
+	</fileset>
+	
+	<path id="classpath">
+		<fileset refid="fileset"/>		
+	</path>
+	
+	<target name="build" depends="compile,jar"/>
+
+	<target name="clean" depends="">
+		<echo>Force regenerate</echo>
+		<delete dir="${build}"/>	
+		
+		<delete file="${jar}"/>
+	</target>
+	
+	<target name="compile" >
+		<echo>Compiling</echo>
+		<mkdir dir="${build}"/>
+		<javac srcdir="${src}" classpathref="classpath" destdir="${build}" debug="on" includes="**/*.java" optimize="on" target="1.5" source="1.5" includeantruntime="false" />
+	</target>
+
+	<target name="jar" depends="compile">
+		<echo>Creating JAR</echo>
+		<jar destfile="${jar}">
+			<zipgroupfileset refid="fileset"></zipgroupfileset>
+			<fileset dir="build" />
+			<manifest>
+			    <attribute name="Main-Class" value="xls.MessagesBuilder"/>
+	        </manifest>
+		</jar>
+	</target>
+
+</project>
