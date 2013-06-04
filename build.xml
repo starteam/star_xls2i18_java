@@ -4,9 +4,9 @@
 	
 	<property name="src" value="${basedir}/src" />
 	<property name="build" value="${basedir}/build" />
-	<property name="jar" value="${basedir}/messagesbuilder.jar"/>
+	<property name="jar" value="${basedir}/xls2i18.jar"/>
 
-	<fileset id="fileset" dir="../CommonLibrariesBin">
+	<fileset id="fileset" dir="..">
 		<include name="microsoft_office/poi/poi-3.2-FINAL-20081019.jar"/>
 	</fileset>
 	
