@@ -6,9 +6,9 @@
 	<property name="build" value="${basedir}/build" />
 	<property name="jar" value="${basedir}/xls2i18.jar"/>
 
-	<fileset id="fileset" dir="../star_xls2i18_java">
-			<include name="microsoft_office/poi/poi-3.2-FINAL-20081019.jar"/>
-		</fileset>
+	<fileset id="fileset" dir="lib">
+		<include name="poi-3.2-FINAL-20081019.jar"/>
+	</fileset>
 	
 	<path id="classpath">
 		<fileset refid="fileset"/>		
