@@ -2,10 +2,12 @@ package xls;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Properties;
+import java.util.TreeMap;
 
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFRow;
@@ -15,20 +17,47 @@ import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 
 public class MessagesBuilder 
 {
-	static String xls = null;
-	static String defaultMsgs = null;
+	boolean json = false;
+	String defaultMsgs = null;
 	
 	public static void main(String[] args) 
 	{
+		String xls = null;
+		String defaultMsgs = null;
+		if( args.length == 2 )
+		{
 		xls = args[0];
 		defaultMsgs = args[1];
-		
-		new MessagesBuilder(xls, defaultMsgs);
+		new MessagesBuilder(xls, defaultMsgs,false);
+		}
+		else if( args.length == 3 )
+		{
+			if( "-json".equalsIgnoreCase(args[0])) {
+				xls = args[1];
+				defaultMsgs = args[2];
+				new MessagesBuilder(xls, defaultMsgs,true);
+			}
+			else
+			{
+				help();
+			}
+		}
+		else
+		{
+			help();
+		}
 	}
 	
-	public MessagesBuilder(String xlsFilePath, String msgsFilePath) 
+	static void help() 
+	{
+		System.out.println( "For more info visit: https://github.com/starteam/star_xls2i18_java ");
+	}
+	
+	public MessagesBuilder(String xlsFilePath, String msgsFilePath, boolean json) 
 	{
 		super();
+		this.json = json;
+		this.defaultMsgs = msgsFilePath;
 		InputStream isXls = lanXls(xlsFilePath);
 		InputStream isDefault = defaultMsgsFile(msgsFilePath);
 		load(isXls, isDefault);
@@ -115,6 +144,10 @@ public class MessagesBuilder
 							if(props[i] != null)
 							{
 								createMsgsFile(props[i], lanArray[i]);
+								if( json )
+								{
+									createMsgsJsonFile(props[i],lanArray[i],myProp);
+								}
 							}
 						}
 					}
@@ -131,6 +164,7 @@ public class MessagesBuilder
 			}			
 		}
 	}
+	
 	private boolean hasKeys(Properties prop1, Properties prop0)
 	{
 		boolean hasKeys = true;
@@ -182,6 +216,98 @@ public class MessagesBuilder
 			System.err.println(e);
 		}
 	}
+	
+
+	private void createMsgsJsonFile(Properties props, String lan, Properties myProp) 
+	{	
+		String[] defaultMsgsPath = defaultMsgs.split("\\.");
+		TreeMap<String, String> propMap = new TreeMap<String, String>();
+		for( java.util.Map.Entry<Object,Object> e : myProp.entrySet())
+		{
+			propMap.put( e.getKey().toString() , e.getValue().toString() );
+		}
+		for( java.util.Map.Entry<Object,Object> e : props.entrySet())
+		{
+			propMap.put( e.getKey().toString() , e.getValue().toString() );
+		}
+		try
+		{
+			FileOutputStream msgs = new FileOutputStream(defaultMsgsPath[0] + "_"+ lan + ".json");
+			StringBuffer sb = new StringBuffer();
+			sb.append( "{");
+			for( java.util.Map.Entry<String,String> e : propMap.entrySet())
+			{
+				sb.append( MessageFormat.format( "{0}:{1},", quote(e.getKey().toString()) , quote(e.getValue().toString()) ));
+//				sb.append( MessageFormat.format( "\"{0}\":\"{1}\",", URLEncoder.encode(e.getKey().toString()) , URLEncoder.encode(e.getValue().toString()) ));
+				
+			}
+			sb.deleteCharAt(sb.length()-1);
+			sb.append( "}");
+			msgs.write( sb.toString().getBytes());
+			msgs.flush();
+			msgs.close();
+		}
+		catch (Exception e)
+		{
+			System.err.println(e);
+		}
+	}
+	
+	public static String quote(String string) {
+        if (string == null || string.length() == 0) {
+            return "\"\"";
+        }
+
+        char         c = 0;
+        int          i;
+        int          len = string.length();
+        StringBuilder sb = new StringBuilder(len + 4);
+        String       t;
+
+        sb.append('"');
+        for (i = 0; i < len; i += 1) {
+            c = string.charAt(i);
+            switch (c) {
+            case '\\':
+            case '"':
+                sb.append('\\');
+                sb.append(c);
+                break;
+            case '/':
+//                if (b == '<') {
+                    sb.append('\\');
+//                }
+                sb.append(c);
+                break;
+            case '\b':
+                sb.append("\\b");
+                break;
+            case '\t':
+                sb.append("\\t");
+                break;
+            case '\n':
+                sb.append("\\n");
+                break;
+            case '\f':
+                sb.append("\\f");
+                break;
+            case '\r':
+               sb.append("\\r");
+               break;
+            default:
+                if (c < ' ') {
+                    t = "000" + Integer.toHexString(c);
+                    sb.append("\\u" + t.substring(t.length() - 4));
+                } else {
+                    sb.append(c);
+                }
+            }
+        }
+        sb.append('"');
+        return sb.toString();
+    }
+	
+	
 	
 	private static Properties[] createProps(String[] propsArray)
 	{
